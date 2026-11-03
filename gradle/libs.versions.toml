@@ -9,6 +9,7 @@ composeMultiplatform = "1.12.2"
 kotlinxCoroutines = "1.11.0"
 mavenPublish = "0.37.0"
 ktfmt = "0.27.0"
+klibsIoNotifier = "0.0.1"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
@@ -32,3 +33,4 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
+klibs-io-notifier = { id = "org.jetbrains.kotlin.klibs-io-notifier", version.ref = "klibsIoNotifier" }

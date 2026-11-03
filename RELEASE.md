@@ -59,13 +59,16 @@ The ruleset of `main` lets only the maintainer push to it, so the steps below ar
    summary of the run), builds all publications and then waits for the approval of the `release` environment. After the
    approval it:
     1. creates the GitHub release as a draft with the release notes;
-    2. uploads to Maven Central and releases it (a published version cannot be changed or removed);
+    2. tells klibs.io about the version (the klibs-io notifier plugin) and uploads to Maven Central and releases it (a
+       published version cannot be changed or removed);
     3. publishes the GitHub release.
 
 7. Check the result:
     - the GitHub release has the notes and is marked as latest;
     - central.sonatype.com → Deployments shows the deployment as published (the artifacts appear on search.maven.org
       after about half an hour);
+    - klibs.io lists the version, which can take a day because it waits for the copy on Google's Maven Central mirror:
+      `https://klibs.io/package/dev.schattauer.edgechameleon/edgechameleon/X.Y.Z/status`;
     - the dependency resolves: `dev.schattauer.edgechameleon:edgechameleon:X.Y.Z` in a fresh project with
       `mavenCentral()`.
 
