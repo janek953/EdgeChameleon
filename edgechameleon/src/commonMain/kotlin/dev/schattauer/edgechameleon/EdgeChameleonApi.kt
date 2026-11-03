@@ -27,8 +27,8 @@ public annotation class ExperimentalEdgeChameleonApi
  * @param cellCount number of cells each bar is reduced to.
  * @param contrastThreshold relative luminance below which light icons have the better contrast.
  * @param hysteresis factor that the current result moves the threshold by, to prevent flicker.
- * @param iconZoneWeight vote weight of the areas where icons usually sit: the outer quarters of the
- *   status bar, and the buttons of the navigation bar.
+ * @param iconZoneWeight vote weight of the outer quarters of the status bar, where the clock and
+ *   the system icons usually sit. Every cell of the navigation bar counts the same.
  */
 @ExperimentalEdgeChameleonApi
 @Immutable

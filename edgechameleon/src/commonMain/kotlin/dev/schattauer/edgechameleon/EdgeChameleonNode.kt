@@ -130,7 +130,7 @@ internal class EdgeChameleonNode(
 
     private fun rebuildForTuning() {
         statusWeights = BarDecider.statusBarWeights(tuning.cellCount, tuning.iconZoneWeight)
-        navigationWeights = BarDecider.navigationBarWeights(tuning.cellCount, tuning.iconZoneWeight)
+        navigationWeights = BarDecider.navigationBarWeights(tuning.cellCount)
         // A sample of the old tuning must not run next to the one of the new tuning
         throttle?.cancel()
         throttle = SampleThrottle(coroutineScope, 1000L / tuning.maxSamplesPerSecond) { sample() }

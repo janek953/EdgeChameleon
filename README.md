@@ -42,7 +42,7 @@ Taken from the sample app with its debug panel on, which shows the 16 sampled ce
 | Light content | Dark content | Scrolling | Mixed content |
 |---|---|---|---|
 | ![Dark icons on a white screen](docs/images/light-content.png) | ![Light icons on a dark screen](docs/images/dark-content.png) | ![Light icons while dark bands are behind both bars](docs/images/scrolling.png) | ![Light icons on a screen with dark edges and a white middle](docs/images/mixed-content.png) |
-| Dark icons | Light icons | Follows what is behind each bar | The cells where icons sit decide, so an icon over a different colour can lose contrast |
+| Dark icons | Light icons | Follows what is behind each bar: light icons over a dark band, dark icons over a white one | No icon colour fits the whole bar, so an icon over a different colour can lose contrast |
 
 ## Options
 
@@ -64,8 +64,9 @@ Modifier.edgeChameleon(
 ## Behaviour
 
 - The content is sampled after it changes, at most 10 times per second, and not at all on a static screen.
-- Each bar is reduced to 16 cells, and the cells vote for the icon colour with the better contrast. Cells where icons
-  usually sit count three times.
+- Each bar is reduced to 16 cells, and the cells vote for the icon colour with the better contrast. In the status bar,
+  the outer quarters, where the clock and the system icons sit, count three times. In the navigation bar, every cell
+  counts the same, so the whole width of the bar decides.
 - Only Compose content inside the modifier is sampled.
 - Sampling pauses while another window, such as a `Dialog`, has the focus, and the icons keep their tint until then.
 - A full-screen `Dialog` has its own bars: add the modifier to the content of the dialog as well. It has no effect in a

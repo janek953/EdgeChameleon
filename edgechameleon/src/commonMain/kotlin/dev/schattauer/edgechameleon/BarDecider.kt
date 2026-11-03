@@ -1,6 +1,5 @@
 package dev.schattauer.edgechameleon
 
-import kotlin.math.abs
 import kotlin.math.pow
 
 /**
@@ -75,18 +74,11 @@ internal object BarDecider {
         }
     }
 
-    /** The three navigation buttons sit at about these positions along the bar. */
-    private val navigationButtons = floatArrayOf(0.21f, 0.5f, 0.79f)
-
-    /** Half the width of the area around a navigation button that counts more. */
-    private const val NavigationButtonReach = 0.07f
-
-    /** Cells around the navigation buttons count more, as the rest of the bar shows no icons. */
-    fun navigationBarWeights(count: Int, buttonWeight: Float): FloatArray {
-        return FloatArray(count) { cell ->
-            val center = (cell + 0.5f) / count
-            if (navigationButtons.any { abs(center - it) <= NavigationButtonReach }) buttonWeight
-            else 1f
-        }
+    /**
+     * Unlike the status bar, the whole width of the navigation bar decides. Where the buttons sit
+     * depends on the device, so no part of the bar counts more.
+     */
+    fun navigationBarWeights(count: Int): FloatArray {
+        return FloatArray(count) { 1f }
     }
 }

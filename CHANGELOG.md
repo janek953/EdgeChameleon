@@ -10,7 +10,9 @@
 
 **Changed**
 
-- Upcoming changes go here
+- The navigation bar counts every cell the same, so the whole width of the bar decides. Before, three zones around the
+  buttons counted three times, at positions that do not match every device. `EdgeChameleonTuning.iconZoneWeight` now
+  only applies to the status bar
 
 ## [0.1.0]
 

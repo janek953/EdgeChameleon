@@ -68,22 +68,26 @@ class BarDeciderTest {
     }
 
     @Test
-    fun navigationButtonsOutvoteTheRestOfTheBar() {
-        val weights = BarDecider.navigationBarWeights(16, buttonWeight = 3f)
-        // Back and recents on dark edges and home on a white middle, so most buttons need light
-        // icons
-        val cells = IntArray(16) { if (it < 4 || it >= 12) black else white }
-        assertEquals(BarIcons.Light, decide(cells, weights = weights))
-        // An even vote would be a tie here, and would keep the previous result
-        assertEquals(BarIcons.Dark, decide(cells, previous = BarIcons.Dark))
-        assertEquals(BarIcons.Light, decide(cells, previous = BarIcons.Dark, weights = weights))
+    fun theWholeWidthOfTheNavigationBarCountsTheSame() {
+        val weights = BarDecider.navigationBarWeights(16)
+        assertContentEquals(FloatArray(16) { 1f }, weights)
     }
 
     @Test
-    fun navigationBarWeightsAreSymmetricAndMarkThreeZones() {
-        val weights = BarDecider.navigationBarWeights(16, buttonWeight = 3f)
-        assertContentEquals(weights, weights.reversedArray())
-        assertEquals(6, weights.count { it == 3f })
+    fun darkEdgesAndAWhiteMiddleTieInTheNavigationBar() {
+        val weights = BarDecider.navigationBarWeights(16)
+        val cells = IntArray(16) { if (it < 4 || it >= 12) black else white }
+        // Half of the bar needs light icons and half needs dark icons, so the previous result stays
+        assertNull(decide(cells, weights = weights))
+        assertEquals(BarIcons.Dark, decide(cells, previous = BarIcons.Dark, weights = weights))
+        assertEquals(BarIcons.Light, decide(cells, previous = BarIcons.Light, weights = weights))
+    }
+
+    @Test
+    fun aWhiteMiddleOfTheNavigationBarWinsOverNarrowerDarkEdges() {
+        val weights = BarDecider.navigationBarWeights(16)
+        val cells = IntArray(16) { if (it < 3 || it >= 13) black else white }
+        assertEquals(BarIcons.Dark, decide(cells, weights = weights))
     }
 
     @Test
