@@ -1,0 +1,10 @@
+.gradle/
+.kotlin/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+# Names that must not appear in the public repository, read by scripts/check-hygiene.sh
+.hygiene-denylist

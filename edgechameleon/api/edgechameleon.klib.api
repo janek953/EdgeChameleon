@@ -1,0 +1,66 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, js, macosArm64, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <dev.schattauer.edgechameleon:edgechameleon>
+open annotation class dev.schattauer.edgechameleon/ExperimentalEdgeChameleonApi : kotlin/Annotation { // dev.schattauer.edgechameleon/ExperimentalEdgeChameleonApi|null[0]
+    constructor <init>() // dev.schattauer.edgechameleon/ExperimentalEdgeChameleonApi.<init>|<init>(){}[0]
+}
+
+final enum class dev.schattauer.edgechameleon/BarIcons : kotlin/Enum<dev.schattauer.edgechameleon/BarIcons> { // dev.schattauer.edgechameleon/BarIcons|null[0]
+    enum entry Dark // dev.schattauer.edgechameleon/BarIcons.Dark|null[0]
+    enum entry Light // dev.schattauer.edgechameleon/BarIcons.Light|null[0]
+
+    final val entries // dev.schattauer.edgechameleon/BarIcons.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<dev.schattauer.edgechameleon/BarIcons> // dev.schattauer.edgechameleon/BarIcons.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): dev.schattauer.edgechameleon/BarIcons // dev.schattauer.edgechameleon/BarIcons.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<dev.schattauer.edgechameleon/BarIcons> // dev.schattauer.edgechameleon/BarIcons.values|values#static(){}[0]
+}
+
+final class dev.schattauer.edgechameleon/EdgeChameleonState { // dev.schattauer.edgechameleon/EdgeChameleonState|null[0]
+    constructor <init>() // dev.schattauer.edgechameleon/EdgeChameleonState.<init>|<init>(){}[0]
+
+    final var collectCells // dev.schattauer.edgechameleon/EdgeChameleonState.collectCells|{}collectCells[0]
+        final fun <get-collectCells>(): kotlin/Boolean // dev.schattauer.edgechameleon/EdgeChameleonState.collectCells.<get-collectCells>|<get-collectCells>(){}[0]
+        final fun <set-collectCells>(kotlin/Boolean) // dev.schattauer.edgechameleon/EdgeChameleonState.collectCells.<set-collectCells>|<set-collectCells>(kotlin.Boolean){}[0]
+    final var navigationBarCells // dev.schattauer.edgechameleon/EdgeChameleonState.navigationBarCells|{}navigationBarCells[0]
+        final fun <get-navigationBarCells>(): kotlin.collections/List<androidx.compose.ui.graphics/Color> // dev.schattauer.edgechameleon/EdgeChameleonState.navigationBarCells.<get-navigationBarCells>|<get-navigationBarCells>(){}[0]
+    final var navigationBarIcons // dev.schattauer.edgechameleon/EdgeChameleonState.navigationBarIcons|{}navigationBarIcons[0]
+        final fun <get-navigationBarIcons>(): dev.schattauer.edgechameleon/BarIcons? // dev.schattauer.edgechameleon/EdgeChameleonState.navigationBarIcons.<get-navigationBarIcons>|<get-navigationBarIcons>(){}[0]
+    final var sampleCount // dev.schattauer.edgechameleon/EdgeChameleonState.sampleCount|{}sampleCount[0]
+        final fun <get-sampleCount>(): kotlin/Long // dev.schattauer.edgechameleon/EdgeChameleonState.sampleCount.<get-sampleCount>|<get-sampleCount>(){}[0]
+    final var statusBarCells // dev.schattauer.edgechameleon/EdgeChameleonState.statusBarCells|{}statusBarCells[0]
+        final fun <get-statusBarCells>(): kotlin.collections/List<androidx.compose.ui.graphics/Color> // dev.schattauer.edgechameleon/EdgeChameleonState.statusBarCells.<get-statusBarCells>|<get-statusBarCells>(){}[0]
+    final var statusBarIcons // dev.schattauer.edgechameleon/EdgeChameleonState.statusBarIcons|{}statusBarIcons[0]
+        final fun <get-statusBarIcons>(): dev.schattauer.edgechameleon/BarIcons? // dev.schattauer.edgechameleon/EdgeChameleonState.statusBarIcons.<get-statusBarIcons>|<get-statusBarIcons>(){}[0]
+}
+
+final class dev.schattauer.edgechameleon/EdgeChameleonTuning { // dev.schattauer.edgechameleon/EdgeChameleonTuning|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Int = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ...) // dev.schattauer.edgechameleon/EdgeChameleonTuning.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Float;kotlin.Float;kotlin.Float){}[0]
+
+    final val cellCount // dev.schattauer.edgechameleon/EdgeChameleonTuning.cellCount|{}cellCount[0]
+        final fun <get-cellCount>(): kotlin/Int // dev.schattauer.edgechameleon/EdgeChameleonTuning.cellCount.<get-cellCount>|<get-cellCount>(){}[0]
+    final val contrastThreshold // dev.schattauer.edgechameleon/EdgeChameleonTuning.contrastThreshold|{}contrastThreshold[0]
+        final fun <get-contrastThreshold>(): kotlin/Float // dev.schattauer.edgechameleon/EdgeChameleonTuning.contrastThreshold.<get-contrastThreshold>|<get-contrastThreshold>(){}[0]
+    final val hysteresis // dev.schattauer.edgechameleon/EdgeChameleonTuning.hysteresis|{}hysteresis[0]
+        final fun <get-hysteresis>(): kotlin/Float // dev.schattauer.edgechameleon/EdgeChameleonTuning.hysteresis.<get-hysteresis>|<get-hysteresis>(){}[0]
+    final val iconZoneWeight // dev.schattauer.edgechameleon/EdgeChameleonTuning.iconZoneWeight|{}iconZoneWeight[0]
+        final fun <get-iconZoneWeight>(): kotlin/Float // dev.schattauer.edgechameleon/EdgeChameleonTuning.iconZoneWeight.<get-iconZoneWeight>|<get-iconZoneWeight>(){}[0]
+    final val maxSamplesPerSecond // dev.schattauer.edgechameleon/EdgeChameleonTuning.maxSamplesPerSecond|{}maxSamplesPerSecond[0]
+        final fun <get-maxSamplesPerSecond>(): kotlin/Int // dev.schattauer.edgechameleon/EdgeChameleonTuning.maxSamplesPerSecond.<get-maxSamplesPerSecond>|<get-maxSamplesPerSecond>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.schattauer.edgechameleon/EdgeChameleonTuning.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.schattauer.edgechameleon/EdgeChameleonTuning.hashCode|hashCode(){}[0]
+}
+
+final val dev.schattauer.edgechameleon/dev_schattauer_edgechameleon_EdgeChameleonState$stableprop // dev.schattauer.edgechameleon/dev_schattauer_edgechameleon_EdgeChameleonState$stableprop|#static{}dev_schattauer_edgechameleon_EdgeChameleonState$stableprop[0]
+final val dev.schattauer.edgechameleon/dev_schattauer_edgechameleon_EdgeChameleonTuning$stableprop // dev.schattauer.edgechameleon/dev_schattauer_edgechameleon_EdgeChameleonTuning$stableprop|#static{}dev_schattauer_edgechameleon_EdgeChameleonTuning$stableprop[0]
+
+final fun (androidx.compose.ui/Modifier).dev.schattauer.edgechameleon/edgeChameleon(dev.schattauer.edgechameleon/EdgeChameleonTuning, kotlin/Boolean = ..., dev.schattauer.edgechameleon/BarIcons? = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., dev.schattauer.edgechameleon/EdgeChameleonState? = ...): androidx.compose.ui/Modifier // dev.schattauer.edgechameleon/edgeChameleon|edgeChameleon@androidx.compose.ui.Modifier(dev.schattauer.edgechameleon.EdgeChameleonTuning;kotlin.Boolean;dev.schattauer.edgechameleon.BarIcons?;kotlin.Boolean;kotlin.Boolean;dev.schattauer.edgechameleon.EdgeChameleonState?){}[0]
+final fun (androidx.compose.ui/Modifier).dev.schattauer.edgechameleon/edgeChameleon(kotlin/Boolean = ..., dev.schattauer.edgechameleon/BarIcons? = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., dev.schattauer.edgechameleon/EdgeChameleonState? = ...): androidx.compose.ui/Modifier // dev.schattauer.edgechameleon/edgeChameleon|edgeChameleon@androidx.compose.ui.Modifier(kotlin.Boolean;dev.schattauer.edgechameleon.BarIcons?;kotlin.Boolean;kotlin.Boolean;dev.schattauer.edgechameleon.EdgeChameleonState?){}[0]
+final fun dev.schattauer.edgechameleon/dev_schattauer_edgechameleon_EdgeChameleonState$stableprop_getter(): kotlin/Int // dev.schattauer.edgechameleon/dev_schattauer_edgechameleon_EdgeChameleonState$stableprop_getter|dev_schattauer_edgechameleon_EdgeChameleonState$stableprop_getter(){}[0]
+final fun dev.schattauer.edgechameleon/dev_schattauer_edgechameleon_EdgeChameleonTuning$stableprop_getter(): kotlin/Int // dev.schattauer.edgechameleon/dev_schattauer_edgechameleon_EdgeChameleonTuning$stableprop_getter|dev_schattauer_edgechameleon_EdgeChameleonTuning$stableprop_getter(){}[0]

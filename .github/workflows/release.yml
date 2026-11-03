@@ -1,0 +1,121 @@
+name: Release
+
+# A release is a tag X.Y.Z on main, see RELEASE.md. Started by hand, it is a dry run: everything is
+# built and tested, nothing is published.
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version of a dry run: everything is built and tested, nothing is published"
+        required: true
+        default: "0.0.0-dryrun"
+        type: string
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  VERSION: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: The tag is a version on main and has release notes
+        run: |
+          echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$' || { echo "::error::Invalid version: $VERSION"; exit 1; }
+          section=Snapshot
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            git fetch origin main
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+              echo "::error::$VERSION is not on main, release only from main"
+              exit 1
+            fi
+            section="$VERSION"
+          fi
+          notes=$(./scripts/release-notes.sh "$section") || { echo "::error::CHANGELOG.md has no section for $section"; exit 1; }
+          if [ "$section" != Snapshot ] && printf '%s\n' "$notes" | grep -q 'go here'; then
+            echo "::error::The section $section of CHANGELOG.md still has a placeholder"
+            exit 1
+          fi
+          # Readable before the approval of the release
+          printf '## Release notes of %s\n\n%s\n' "$section" "$notes" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    needs: [guard]
+    # iOS and macOS artifacts can only be built on macOS
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      # Builds every publication of every target without signing, so a problem shows up before the approval
+      - name: Build all publications
+        run: ./gradlew :edgechameleon:publishToMavenLocal -PreleaseVersion="$VERSION" --no-configuration-cache
+
+  publish:
+    if: github.event_name == 'push'
+    needs: [checks, guard, build]
+    runs-on: macos-latest
+    timeout-minutes: 60
+    # The reviewer and the tag rule of this environment are the gate for everything that cannot be undone
+    environment: release
+    permissions:
+      contents: write # create the GitHub release
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Write the release notes
+        run: |
+          {
+            ./scripts/release-notes.sh "$VERSION"
+            # shellcheck disable=SC2016
+            printf '\n## Maven Central\n\n```kotlin\nimplementation("dev.schattauer.edgechameleon:edgechameleon:%s")\n```\n' "$VERSION"
+          } > RELEASE_NOTES.md
+      # The GitHub release first, as a draft: it can be fixed or deleted. Maven Central cannot.
+      - name: Create the draft GitHub release
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release edit "$VERSION" --notes-file RELEASE_NOTES.md
+          else
+            gh release create "$VERSION" --verify-tag --draft --title "$VERSION" --notes-file RELEASE_NOTES.md
+          fi
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: ./gradlew :edgechameleon:publishAndReleaseToMavenCentral -PreleaseVersion="$VERSION" --no-configuration-cache
+      - name: Publish the GitHub release
+        run: gh release edit "$VERSION" --draft=false --latest

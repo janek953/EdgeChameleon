@@ -1,0 +1,44 @@
+public final class dev/schattauer/edgechameleon/BarIcons : java/lang/Enum {
+	public static final field Dark Ldev/schattauer/edgechameleon/BarIcons;
+	public static final field Light Ldev/schattauer/edgechameleon/BarIcons;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Ldev/schattauer/edgechameleon/BarIcons;
+	public static fun values ()[Ldev/schattauer/edgechameleon/BarIcons;
+}
+
+public final class dev/schattauer/edgechameleon/EdgeChameleonKt {
+	public static final fun edgeChameleon (Landroidx/compose/ui/Modifier;Ldev/schattauer/edgechameleon/EdgeChameleonTuning;ZLdev/schattauer/edgechameleon/BarIcons;ZZLdev/schattauer/edgechameleon/EdgeChameleonState;)Landroidx/compose/ui/Modifier;
+	public static final fun edgeChameleon (Landroidx/compose/ui/Modifier;ZLdev/schattauer/edgechameleon/BarIcons;ZZLdev/schattauer/edgechameleon/EdgeChameleonState;)Landroidx/compose/ui/Modifier;
+	public static synthetic fun edgeChameleon$default (Landroidx/compose/ui/Modifier;Ldev/schattauer/edgechameleon/EdgeChameleonTuning;ZLdev/schattauer/edgechameleon/BarIcons;ZZLdev/schattauer/edgechameleon/EdgeChameleonState;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+	public static synthetic fun edgeChameleon$default (Landroidx/compose/ui/Modifier;ZLdev/schattauer/edgechameleon/BarIcons;ZZLdev/schattauer/edgechameleon/EdgeChameleonState;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+}
+
+public final class dev/schattauer/edgechameleon/EdgeChameleonState {
+	public static final field $stable I
+	public fun <init> ()V
+	public final fun getCollectCells ()Z
+	public final fun getNavigationBarCells ()Ljava/util/List;
+	public final fun getNavigationBarIcons ()Ldev/schattauer/edgechameleon/BarIcons;
+	public final fun getSampleCount ()J
+	public final fun getStatusBarCells ()Ljava/util/List;
+	public final fun getStatusBarIcons ()Ldev/schattauer/edgechameleon/BarIcons;
+	public final fun setCollectCells (Z)V
+}
+
+public final class dev/schattauer/edgechameleon/EdgeChameleonTuning {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (IIFFF)V
+	public synthetic fun <init> (IIFFFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCellCount ()I
+	public final fun getContrastThreshold ()F
+	public final fun getHysteresis ()F
+	public final fun getIconZoneWeight ()F
+	public final fun getMaxSamplesPerSecond ()I
+	public fun hashCode ()I
+}
+
+public abstract interface annotation class dev/schattauer/edgechameleon/ExperimentalEdgeChameleonApi : java/lang/annotation/Annotation {
+}
+
