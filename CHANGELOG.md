@@ -2,7 +2,19 @@
 
 ## [Snapshot]
 
-[Snapshot]: https://github.com/rschattauer/EdgeChameleon/commits/main
+[Snapshot]: https://github.com/rschattauer/EdgeChameleon/compare/0.1.0...main
+
+**New**
+
+- Upcoming additions go here
+
+**Changed**
+
+- Upcoming changes go here
+
+## [0.1.0]
+
+[0.1.0]: https://github.com/rschattauer/EdgeChameleon/releases/tag/0.1.0
 
 First release. Compose Multiplatform library that switches the status bar and navigation bar icons between light and
 dark, based on the content behind the bars.
