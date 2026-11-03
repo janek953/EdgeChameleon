@@ -1,5 +1,7 @@
 # EdgeChameleon
 
+[![Maven Central](https://img.shields.io/maven-central/v/dev.schattauer.edgechameleon/edgechameleon)](https://central.sonatype.com/artifact/dev.schattauer.edgechameleon/edgechameleon)
+
 Compose Multiplatform library that switches the status bar and navigation bar icons between light and dark, based on
 the content behind the bars.
 
