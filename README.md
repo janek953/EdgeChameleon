@@ -1,13 +1,36 @@
 # EdgeChameleon
 
 [![Maven Central](https://img.shields.io/maven-central/v/dev.schattauer.edgechameleon/edgechameleon)](https://central.sonatype.com/artifact/dev.schattauer.edgechameleon/edgechameleon)
+[![CI](https://github.com/rschattauer/EdgeChameleon/actions/workflows/ci.yml/badge.svg)](https://github.com/rschattauer/EdgeChameleon/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-Compose Multiplatform library that switches the status bar and navigation bar icons between light and dark, based on
-the content behind the bars.
+Switches the status bar and navigation bar icons between light and dark, based on the content behind the bars.
+
+EdgeChameleon is a Compose Multiplatform library: add it to `commonMain` and call `Modifier.edgeChameleon()` from shared
+UI code, without `expect`/`actual`. It is only implemented on Android, because the other targets don't need it. There the
+modifier only draws its content, so the same code compiles and runs everywhere. See [Platforms](#platforms).
 
 ## Quick start
 
 **1. Add the dependency**
+
+In a Compose Multiplatform Gradle module (`build.gradle.kts`):
+
+```kotlin
+repositories {
+    mavenCentral()
+}
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("dev.schattauer.edgechameleon:edgechameleon:<version>")
+        }
+    }
+}
+```
+
+In an Android Gradle module (`build.gradle.kts`):
 
 ```kotlin
 repositories {
@@ -19,21 +42,45 @@ dependencies {
 }
 ```
 
-**2. Add the modifier to the root of your app content, and draw edge-to-edge**
+**2. Add the modifier to the root of your app content**
+
+```kotlin
+import dev.schattauer.edgechameleon.edgeChameleon
+
+@Composable
+fun App() {
+    MyApp(Modifier.fillMaxSize().edgeChameleon())
+}
+```
+
+**3. Draw edge-to-edge on Android**
 
 ```kotlin
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setContent {
-            MyApp(Modifier.fillMaxSize().edgeChameleon())
-        }
+        setContent { App() }
     }
 }
 ```
 
 The icons now follow your content.
+
+**Requirements:** Android minSdk 23, with sampling from Android 9 (API 28); built with Compose Multiplatform 1.12; the
+app draws edge-to-edge.
+
+## Platforms
+
+EdgeChameleon is only implemented on Android. The other targets are part of the library so that shared code can use the
+modifier, and there it only draws its content; the options have no effect.
+
+| Platform | What happens | Why |
+|---|---|---|
+| Android 9 (API 28) and newer | Samples the content and sets the icons | An edge-to-edge app draws behind the bars, and the icon colour does not follow the content |
+| Android below 9 | Only draws the content | Not supported |
+| iOS | Only draws the content | The system adapts the status bar to the content itself |
+| macOS, desktop (JVM), web (JS and Wasm) | Only draws the content | No system bars are drawn over the app content |
 
 ## Screenshots
 
@@ -61,7 +108,7 @@ Modifier.edgeChameleon(
 `EdgeChameleonTuning` sets the sampling rate, cell count, contrast threshold, hysteresis and zone weights. It is marked
 `@ExperimentalEdgeChameleonApi`.
 
-## Behaviour
+## Behaviour on Android
 
 - The content is sampled after it changes, at most 10 times per second, and not at all on a static screen.
 - Each bar is reduced to 16 cells, and the cells vote for the icon colour with the better contrast. In the status bar,
@@ -76,13 +123,6 @@ Modifier.edgeChameleon(
 - Disabling or removing the modifier restores the icons the app had before the library first changed them. Changes the
   app makes to the icons while the modifier is active are replaced.
 
-## Platforms
-
-| Platform | Behaviour |
-|---|---|
-| Android 9 (API 28) and newer | Samples the content and sets the icons |
-| Android below 9, iOS, macOS, desktop (JVM), web (JS and Wasm) | Only draws the content; the options have no effect |
-
 ## Sample
 
 `sample/` holds an Android app with a colour screen, scrolling bands and mixed backgrounds. Its debug toggle shows the
@@ -92,19 +132,10 @@ sampled cells and the current result.
 ./gradlew :sample:androidApp:installDebug
 ```
 
-## Tests and formatting
-
-- Unit tests: `./gradlew :edgechameleon:testAndroidHostTest :edgechameleon:jvmTest`
-- Device tests, on a running emulator or device: `./gradlew :edgechameleon:connectedAndroidDeviceTest`
-- Check the formatting: `./gradlew ktfmtCheck ktfmtCheckScripts`
-- Format the code: `./gradlew ktfmtFormat ktfmtFormatScripts`
-- Check the public API against `edgechameleon/api`: `./gradlew :edgechameleon:checkKotlinAbi`. After a deliberate API
-  change, update the dump with `./gradlew :edgechameleon:updateKotlinAbi`.
-
 ## More
 
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version
-- [CONTRIBUTING.md](CONTRIBUTING.md): development setup and pull requests
+- [CONTRIBUTING.md](CONTRIBUTING.md): development setup, tests, formatting and pull requests
 - [SECURITY.md](SECURITY.md): how to report a vulnerability
 - [RELEASE.md](RELEASE.md): how a release is made
 

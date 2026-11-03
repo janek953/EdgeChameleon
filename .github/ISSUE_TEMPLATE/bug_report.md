@@ -16,7 +16,8 @@ labels: bug
 
 - EdgeChameleon version:
 - Compose Multiplatform version:
-- Platform and Android version (API level):
+- Android version (API level). The library is only implemented on Android, so on other targets the modifier does
+  nothing by design:
 - Device or emulator:
 - Navigation: gesture or three buttons
 - Drawing edge-to-edge with `enableEdgeToEdge()`: yes / no

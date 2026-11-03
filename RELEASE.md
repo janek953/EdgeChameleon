@@ -41,21 +41,18 @@ The ruleset of `main` lets only the maintainer push to it, so the steps below ar
 2. Update `CHANGELOG.md`:
     1. Change `Snapshot` to the version that is released, e.g. `[0.2.0]`, and remove placeholder lines such as
        `Upcoming additions go here`. The workflow refuses a section that still has one.
-    2. Point its link at the release: `[0.2.0]: https://github.com/rschattauer/EdgeChameleon/compare/0.1.0...0.2.0`. The
-       first release links to `https://github.com/rschattauer/EdgeChameleon/releases/tag/0.1.0`.
+    2. Point its link at the release: `[0.2.0]: https://github.com/rschattauer/EdgeChameleon/compare/0.1.0...0.2.0`.
     3. Add a new `Snapshot` section on the top, with the link
        `[Snapshot]: https://github.com/rschattauer/EdgeChameleon/compare/0.2.0...main` and the placeholders
        `**New**` / `- Upcoming additions go here` and `**Changed**` / `- Upcoming changes go here`.
        The workflow takes the release notes from the section of the version.
 
-3. For the first release only: remove the "Not published yet" note from the quick start in `README.md`.
+3. Commit and push to `main`: `git commit -am "Release X.Y.Z" && git push`. Wait for CI.
 
-4. Commit and push to `main`: `git commit -am "Release X.Y.Z" && git push`. Wait for CI.
-
-5. Tag exactly that commit and push only the tag:
+4. Tag exactly that commit and push only the tag:
    `git tag -am "Release X.Y.Z" X.Y.Z && git push origin X.Y.Z`
 
-6. The workflow `Release` runs the checks again, checks that the tag is on `main` and has release notes (shown in the
+5. The workflow `Release` runs the checks again, checks that the tag is on `main` and has release notes (shown in the
    summary of the run), builds all publications and then waits for the approval of the `release` environment. After the
    approval it:
     1. creates the GitHub release as a draft with the release notes;
@@ -63,7 +60,7 @@ The ruleset of `main` lets only the maintainer push to it, so the steps below ar
        published version cannot be changed or removed);
     3. publishes the GitHub release.
 
-7. Check the result:
+6. Check the result:
     - the GitHub release has the notes and is marked as latest;
     - central.sonatype.com → Deployments shows the deployment as published (the artifacts appear on search.maven.org
       after about half an hour);

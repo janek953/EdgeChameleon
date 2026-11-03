@@ -36,13 +36,20 @@ deliberate change of it, run `./gradlew :edgechameleon:updateKotlinAbi` and comm
 
 | Path | What |
 |---|---|
-| `edgechameleon/` | The library: `commonMain` (modifier, node, bar decision, throttle), `androidMain` (pixel readback, window bars), `nonAndroidMain` (no-op implementation), unit tests in `commonTest`, device tests in `androidDeviceTest` |
+| `edgechameleon/` | The library: `commonMain` (modifier, node, bar decision, throttle), `androidMain` (pixel readback, window bars), `nonAndroidMain` (no-op for the targets that don't need it), unit tests in `commonTest`, device tests in `androidDeviceTest` |
 | `edgechameleon/api/` | Dump of the public API, checked in CI |
 | `sample/` | Sample Android app with a debug panel (`androidApp`) and its shared Compose code (`shared`) |
 | `docs/images/` | Screenshots of the README |
 | `scripts/` | `check-hygiene.sh` (secret scan) and `release-notes.sh` (notes of a release from `CHANGELOG.md`) |
 
 The Maven artifact is `dev.schattauer.edgechameleon:edgechameleon`.
+
+### Platforms
+
+EdgeChameleon is a Compose Multiplatform library that is only implemented on Android (`androidMain`), because the other
+targets don't need it. `nonAndroidMain` is a deliberate no-op that lets shared code call the modifier everywhere. Please
+don't add an implementation for iOS, macOS, desktop or web; if you think a target needs one, open an issue and explain
+what that platform lacks.
 
 ## Branches and continuous integration
 

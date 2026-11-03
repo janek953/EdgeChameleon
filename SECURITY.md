@@ -28,8 +28,8 @@ applied to and changes the system bar icons of the window of the app. Reports ab
 
 - The library adds no permissions and makes no network requests. It stores nothing: the sampled pixels stay in buffers
   in memory that are reused for the next read, and only the chosen icon colour is kept.
-- Sampling is limited to the Compose content inside the modifier, on Android 9 (API 28) and newer. On other platforms the
-  modifier only draws the content.
+- EdgeChameleon is only implemented on Android. Sampling is limited to the Compose content inside the modifier, on
+  Android 9 (API 28) and newer. On the other targets the modifier only draws the content.
 - While the modifier is active it turns off the navigation bar contrast scrim of the window, and restores it when the
   modifier is disabled or removed. It also changes the light appearance of the system bars, and restores that too.
 - `EdgeChameleonState.collectCells` is experimental and off by default. When on, it hands the averaged colours of the
