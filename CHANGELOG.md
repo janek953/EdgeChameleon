@@ -2,7 +2,19 @@
 
 ## [Snapshot]
 
-[Snapshot]: https://github.com/rschattauer/EdgeChameleon/compare/0.2.0...main
+[Snapshot]: https://github.com/rschattauer/EdgeChameleon/compare/0.3.0...main
+
+**New**
+
+- Upcoming additions go here
+
+**Changed**
+
+- Upcoming changes go here
+
+## [0.3.0]
+
+[0.3.0]: https://github.com/rschattauer/EdgeChameleon/compare/0.2.0...0.3.0
 
 **New**
 
