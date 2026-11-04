@@ -21,3 +21,5 @@ include(":edgechameleon")
 include(":sample:shared")
 
 include(":sample:androidApp")
+
+include(":benchmark")

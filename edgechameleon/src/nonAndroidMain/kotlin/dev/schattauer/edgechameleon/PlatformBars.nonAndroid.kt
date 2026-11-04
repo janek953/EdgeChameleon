@@ -22,4 +22,8 @@ private object NoBars : PlatformBars {
     }
 
     override fun setIcons(statusBar: BarIcons?, navigationBar: BarIcons?) {}
+
+    override fun createWindowReader(): WindowReader? {
+        return null
+    }
 }

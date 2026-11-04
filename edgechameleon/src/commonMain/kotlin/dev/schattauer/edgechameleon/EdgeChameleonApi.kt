@@ -19,6 +19,27 @@ public enum class BarIcons {
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY)
 public annotation class ExperimentalEdgeChameleonApi
 
+/** Where [edgeChameleon] reads the colours behind the bars from. */
+@ExperimentalEdgeChameleonApi
+public enum class SamplingSource {
+    /** Lets the library choose. Currently the same as [Content]. */
+    Auto,
+
+    /**
+     * Draws the content of the modifier a second time, into a few pixels. Only content inside the
+     * modifier is seen.
+     */
+    Content,
+
+    /**
+     * Copies the bar areas from the frame that the window has drawn already, so nothing is drawn
+     * twice. Everything the window shows is seen, including Views, content outside of the modifier,
+     * and the window background where nothing is drawn. Only the part of a bar that lies under the
+     * modifier is looked at, as with [Content].
+     */
+    Window,
+}
+
 /**
  * Fine tuning for [edgeChameleon]. The defaults fit most apps.
  *
@@ -29,6 +50,11 @@ public annotation class ExperimentalEdgeChameleonApi
  * @param hysteresis factor that the current result moves the threshold by, to prevent flicker.
  * @param iconZoneWeight vote weight of the outer quarters of the status bar, where the clock and
  *   the system icons usually sit. Every cell of the navigation bar counts the same.
+ * @param maxIdleIntervalMillis longest pause between two readbacks while the content behind the
+ *   bars does not change, for example when something animates elsewhere on the screen. The first
+ *   change after such a stretch is seen after at most this long. A value that is not larger than
+ *   the pause that [maxSamplesPerSecond] gives turns this off.
+ * @param samplingSource where the colours behind the bars are read from.
  */
 @ExperimentalEdgeChameleonApi
 @Immutable
@@ -38,8 +64,11 @@ public class EdgeChameleonTuning(
     public val contrastThreshold: Float = 0.179f,
     public val hysteresis: Float = 1.25f,
     public val iconZoneWeight: Float = 3f,
+    public val maxIdleIntervalMillis: Int = 500,
+    public val samplingSource: SamplingSource = SamplingSource.Auto,
 ) {
     init {
+        require(maxIdleIntervalMillis in 1..10_000) { "maxIdleIntervalMillis must be in 1..10000" }
         require(maxSamplesPerSecond in 1..60) { "maxSamplesPerSecond must be in 1..60" }
         require(cellCount in 4..64) { "cellCount must be in 4..64" }
         require(contrastThreshold > 0f && contrastThreshold < 1f) {
@@ -55,7 +84,9 @@ public class EdgeChameleonTuning(
             cellCount == other.cellCount &&
             contrastThreshold == other.contrastThreshold &&
             hysteresis == other.hysteresis &&
-            iconZoneWeight == other.iconZoneWeight
+            iconZoneWeight == other.iconZoneWeight &&
+            maxIdleIntervalMillis == other.maxIdleIntervalMillis &&
+            samplingSource == other.samplingSource
     }
 
     override fun hashCode(): Int {
@@ -64,6 +95,8 @@ public class EdgeChameleonTuning(
         result = 31 * result + contrastThreshold.hashCode()
         result = 31 * result + hysteresis.hashCode()
         result = 31 * result + iconZoneWeight.hashCode()
+        result = 31 * result + maxIdleIntervalMillis
+        result = 31 * result + samplingSource.hashCode()
         return result
     }
 }

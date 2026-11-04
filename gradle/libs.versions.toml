@@ -24,9 +24,11 @@ androidx-compose-ui-test-junit4 = "androidx.compose.ui:ui-test-junit4:1.12.1"
 androidx-compose-ui-test-manifest = "androidx.compose.ui:ui-test-manifest:1.12.1"
 androidx-test-junit = "androidx.test.ext:junit:1.3.0"
 androidx-test-runner = "androidx.test:runner:1.7.0"
+androidx-benchmark-macro-junit4 = "androidx.benchmark:benchmark-macro-junit4:1.5.0"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-test = { id = "com.android.test", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

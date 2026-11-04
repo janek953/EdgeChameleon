@@ -81,21 +81,24 @@ private class AsyncLayerReader : LayerReader {
     ): Boolean {
         readerFor(width, height)
         val framesBefore = synchronized(lock) { frames }
-        root.setPosition(0, 0, width, height)
-        val canvas = root.beginRecording(width, height)
-        try {
-            drawScope.draw(
-                density,
-                layoutDirection,
-                Canvas(canvas),
-                Size(width.toFloat(), height.toFloat()),
-            ) {
-                drawLayer(layer)
+        val result =
+            traceSection("EdgeChameleon.syncAndDraw") {
+                root.setPosition(0, 0, width, height)
+                val canvas = root.beginRecording(width, height)
+                try {
+                    drawScope.draw(
+                        density,
+                        layoutDirection,
+                        Canvas(canvas),
+                        Size(width.toFloat(), height.toFloat()),
+                    ) {
+                        drawLayer(layer)
+                    }
+                } finally {
+                    root.endRecording()
+                }
+                renderer.createRenderRequest().setWaitForPresent(false).syncAndDraw()
             }
-        } finally {
-            root.endRecording()
-        }
-        val result = renderer.createRenderRequest().setWaitForPresent(false).syncAndDraw()
         // No image will come, so there is no reason to wait for the timeout
         if ((result and NoFrame) != 0) return false
 
@@ -139,6 +142,10 @@ private class AsyncLayerReader : LayerReader {
 
     /** Runs on the reading thread for every frame, and always gives the buffer back. */
     private fun takeFrame(source: ImageReader) {
+        traceSection("EdgeChameleon.takeFrame") { takeFrameTraced(source) }
+    }
+
+    private fun takeFrameTraced(source: ImageReader) {
         val image =
             try {
                 source.acquireLatestImage()

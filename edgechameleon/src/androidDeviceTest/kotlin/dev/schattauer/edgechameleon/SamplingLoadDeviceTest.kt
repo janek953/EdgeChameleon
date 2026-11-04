@@ -38,6 +38,15 @@ class SamplingLoadDeviceTest {
 
     @Test
     fun constantSamplingNeverBlocksTheFramesOfTheApp() {
+        runLoad(SamplingSource.Content)
+    }
+
+    @Test
+    fun constantWindowSamplingNeverBlocksTheFramesOfTheApp() {
+        runLoad(SamplingSource.Window)
+    }
+
+    private fun runLoad(source: SamplingSource) {
         assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
         val slowestFrameMillis = AtomicLong()
         scenario = ActivityScenario.launch(ComponentActivity::class.java)
@@ -61,7 +70,11 @@ class SamplingLoadDeviceTest {
                 Box(
                     Modifier.fillMaxSize()
                         .edgeChameleon(
-                            tuning = EdgeChameleonTuning(maxSamplesPerSecond = 60),
+                            tuning =
+                                EdgeChameleonTuning(
+                                    maxSamplesPerSecond = 60,
+                                    samplingSource = source,
+                                ),
                             state = state,
                         )
                         .background(color)

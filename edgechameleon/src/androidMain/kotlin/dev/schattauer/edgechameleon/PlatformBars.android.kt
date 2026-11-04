@@ -113,6 +113,11 @@ private class AndroidBars(private val view: View) : PlatformBars {
         return BarRegions(statusRegion, navigationRegion)
     }
 
+    override fun createWindowReader(): WindowReader? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return null
+        return window?.let(::PixelCopyWindowReader)
+    }
+
     override fun setIcons(statusBar: BarIcons?, navigationBar: BarIcons?) {
         val window = window ?: return
         val controller = WindowCompat.getInsetsController(window, view)

@@ -31,6 +31,9 @@ internal interface PlatformBars {
 
     /** Applies the icons. A null value leaves that bar untouched. */
     fun setIcons(statusBar: BarIcons?, navigationBar: BarIcons?)
+
+    /** A reader for what the window shows, or null where there is none. */
+    fun createWindowReader(): WindowReader?
 }
 
 internal expect fun createPlatformBars(node: CompositionLocalConsumerModifierNode): PlatformBars

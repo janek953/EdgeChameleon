@@ -6,11 +6,22 @@
 
 **New**
 
-- Upcoming additions go here
+- `Modifier.edgeChameleonHint(icons)` tells the library which icons the content of an element needs. A bar that is
+  completely covered by hints is not sampled at all, and the content is not recorded for it. Partly covered bars are
+  sampled as before
+- Experimental: `EdgeChameleonTuning.samplingSource` (`SamplingSource.Content` or `Window`) reads the bars from the frame
+  that the window has drawn with `PixelCopy`, instead of drawing the content a second time. `Auto`, the default, is
+  `Content` for now
+- A macrobenchmark module (`benchmark`) and a `BenchmarkActivity` in the sample app, to measure what the library costs
+  the frames of an app
 
 **Changed**
 
-- Upcoming changes go here
+- While the bars keep showing the same colours, the pause between two readbacks grows from 100 ms up to 500 ms, so a
+  spinner that redraws elsewhere on the screen no longer causes 10 readbacks per second. The first change after that is
+  seen after at most 500 ms. Experimental: `EdgeChameleonTuning.maxIdleIntervalMillis` sets the limit, and a value that
+  is not larger than the normal pause turns this off
+- The library writes trace sections (`EdgeChameleon.*`) that show up in a system trace
 
 ## [0.2.0]
 

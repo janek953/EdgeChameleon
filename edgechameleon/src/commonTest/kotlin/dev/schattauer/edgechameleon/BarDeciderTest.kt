@@ -137,4 +137,50 @@ class BarDeciderTest {
             )
         assertEquals(BarIcons.Light, result)
     }
+
+    private fun luminances(count: Int): FloatArray {
+        return FloatArray(count) { Float.NaN }
+    }
+
+    @Test
+    fun cellsThatWereNeverStoredCountAsAChange() {
+        val stored = luminances(2)
+        assertTrue(BarDecider.updateLuminances(intArrayOf(white, black), 0, 1, 2, stored, 0.02f))
+        assertEquals(
+            false,
+            BarDecider.updateLuminances(intArrayOf(white, black), 0, 1, 2, stored, 0.02f),
+        )
+    }
+
+    @Test
+    fun smallLuminanceStepsAreNoChange() {
+        val stored = luminances(1)
+        BarDecider.updateLuminances(intArrayOf(gray(100)), 0, 1, 1, stored, 0.02f)
+        assertEquals(
+            false,
+            BarDecider.updateLuminances(intArrayOf(gray(101)), 0, 1, 1, stored, 0.02f),
+        )
+        assertTrue(BarDecider.updateLuminances(intArrayOf(gray(180)), 0, 1, 1, stored, 0.02f))
+    }
+
+    @Test
+    fun aCellThatStartsOrStopsVotingIsAChange() {
+        val stored = luminances(1)
+        BarDecider.updateLuminances(intArrayOf(white), 0, 1, 1, stored, 0.02f)
+        assertTrue(BarDecider.updateLuminances(intArrayOf(transparent), 0, 1, 1, stored, 0.02f))
+        assertEquals(
+            false,
+            BarDecider.updateLuminances(intArrayOf(transparent), 0, 1, 1, stored, 0.02f),
+        )
+        assertTrue(BarDecider.updateLuminances(intArrayOf(white), 0, 1, 1, stored, 0.02f))
+    }
+
+    @Test
+    fun luminancesAreReadWithStartAndStride() {
+        val stored = luminances(2)
+        val pixels = intArrayOf(black, white, black, white)
+        BarDecider.updateLuminances(pixels, 1, 2, 2, stored, 0.02f)
+        assertEquals(BarDecider.luminance(white), stored[0])
+        assertEquals(BarDecider.luminance(white), stored[1])
+    }
 }

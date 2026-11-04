@@ -6,6 +6,10 @@ public final class dev/schattauer/edgechameleon/BarIcons : java/lang/Enum {
 	public static fun values ()[Ldev/schattauer/edgechameleon/BarIcons;
 }
 
+public final class dev/schattauer/edgechameleon/EdgeChameleonHintKt {
+	public static final fun edgeChameleonHint (Landroidx/compose/ui/Modifier;Ldev/schattauer/edgechameleon/BarIcons;)Landroidx/compose/ui/Modifier;
+}
+
 public final class dev/schattauer/edgechameleon/EdgeChameleonKt {
 	public static final fun edgeChameleon (Landroidx/compose/ui/Modifier;Ldev/schattauer/edgechameleon/EdgeChameleonTuning;ZLdev/schattauer/edgechameleon/BarIcons;ZZLdev/schattauer/edgechameleon/EdgeChameleonState;)Landroidx/compose/ui/Modifier;
 	public static final fun edgeChameleon (Landroidx/compose/ui/Modifier;ZLdev/schattauer/edgechameleon/BarIcons;ZZLdev/schattauer/edgechameleon/EdgeChameleonState;)Landroidx/compose/ui/Modifier;
@@ -28,17 +32,28 @@ public final class dev/schattauer/edgechameleon/EdgeChameleonState {
 public final class dev/schattauer/edgechameleon/EdgeChameleonTuning {
 	public static final field $stable I
 	public fun <init> ()V
-	public fun <init> (IIFFF)V
-	public synthetic fun <init> (IIFFFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IIFFFILdev/schattauer/edgechameleon/SamplingSource;)V
+	public synthetic fun <init> (IIFFFILdev/schattauer/edgechameleon/SamplingSource;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCellCount ()I
 	public final fun getContrastThreshold ()F
 	public final fun getHysteresis ()F
 	public final fun getIconZoneWeight ()F
+	public final fun getMaxIdleIntervalMillis ()I
 	public final fun getMaxSamplesPerSecond ()I
+	public final fun getSamplingSource ()Ldev/schattauer/edgechameleon/SamplingSource;
 	public fun hashCode ()I
 }
 
 public abstract interface annotation class dev/schattauer/edgechameleon/ExperimentalEdgeChameleonApi : java/lang/annotation/Annotation {
+}
+
+public final class dev/schattauer/edgechameleon/SamplingSource : java/lang/Enum {
+	public static final field Auto Ldev/schattauer/edgechameleon/SamplingSource;
+	public static final field Content Ldev/schattauer/edgechameleon/SamplingSource;
+	public static final field Window Ldev/schattauer/edgechameleon/SamplingSource;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Ldev/schattauer/edgechameleon/SamplingSource;
+	public static fun values ()[Ldev/schattauer/edgechameleon/SamplingSource;
 }
 

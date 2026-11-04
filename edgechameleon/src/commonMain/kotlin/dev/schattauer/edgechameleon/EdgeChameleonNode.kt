@@ -15,11 +15,13 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
 import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.TraversableNode
 import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.node.requireDensity
 import androidx.compose.ui.node.requireLayoutCoordinates
 import androidx.compose.ui.node.requireLayoutDirection
+import androidx.compose.ui.node.traverseDescendants
 import androidx.compose.ui.platform.LocalGraphicsContext
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.toIntSize
@@ -39,7 +41,9 @@ internal class EdgeChameleonNode(
     private var navigationBar: Boolean,
     private var state: EdgeChameleonState?,
     private var tuning: EdgeChameleonTuning,
-) : Modifier.Node(), DrawModifierNode, CompositionLocalConsumerModifierNode {
+) : Modifier.Node(), DrawModifierNode, CompositionLocalConsumerModifierNode, TraversableNode {
+
+    override val traverseKey: Any = EdgeChameleonKey
 
     override val shouldAutoInvalidate: Boolean = false
 
@@ -61,12 +65,45 @@ internal class EdgeChameleonNode(
     /** Set when no reader works on this device, and the bars are left to the app instead. */
     private var samplingFailed = false
 
+    private var windowReader: WindowReader? = null
+
+    /** Set when the window can not be read, and the content is drawn a second time instead. */
+    private var windowFailed = false
+
+    private val usesWindow: Boolean
+        get() = tuning.samplingSource == SamplingSource.Window && !windowFailed
+
     private var pixels = IntArray(0)
     private var statusWeights = FloatArray(0)
     private var navigationWeights = FloatArray(0)
 
+    /**
+     * What the last readback saw, to tell a sample that changed nothing from one that did. NaN
+     * marks a cell that was not seen yet.
+     */
+    private var statusLuminances = FloatArray(0)
+    private var navigationLuminances = FloatArray(0)
+    private var lastStatusRegion: Rect? = null
+    private var lastNavigationRegion: Rect? = null
+
     private var statusIcons: BarIcons? = null
     private var navigationIcons: BarIcons? = null
+
+    private val hints = ArrayList<EdgeChameleonHintNode>()
+    private val hintBuffer = ArrayList<BarHint>()
+
+    /**
+     * The hints of the previous sample, to tell hints that moved or changed from those that did
+     * not.
+     */
+    private val lastHints = ArrayList<BarHint>()
+    private var hintIcons = arrayOfNulls<BarIcons>(0)
+
+    /**
+     * Set while hints decide every included bar. The content is then not recorded into a layer, so
+     * the modifier costs next to nothing.
+     */
+    private var coveredByHints = false
 
     private val isSampling: Boolean
         get() =
@@ -80,7 +117,15 @@ internal class EdgeChameleonNode(
         graphicsContext = currentValueOf(LocalGraphicsContext)
         bars = createPlatformBars(this)
         samplingFailed = false
+        windowFailed = false
         rebuildForTuning()
+        // Hints that were there first did not find this node when they were attached. A hint under
+        // another EdgeChameleonNode further down belongs to that one alone.
+        traverseDescendants(EdgeChameleonHintKey) { node ->
+            val hint = node as? EdgeChameleonHintNode
+            if (hint != null && hint.nearestOwner() === this) addHint(hint)
+            TraversableNode.Companion.TraverseDescendantsAction.ContinueTraversal
+        }
         syncMode()
     }
 
@@ -91,6 +136,29 @@ internal class EdgeChameleonNode(
         throttle = null
         bars = null
         graphicsContext = null
+        coveredByHints = false
+        hints.forEach { it.releaseOwner(this) }
+        hints.clear()
+        hintBuffer.clear()
+        lastHints.clear()
+    }
+
+    fun addHint(hint: EdgeChameleonHintNode) {
+        if (hint in hints) return
+        hints += hint
+        hint.setOwner(this)
+        hintsChanged()
+    }
+
+    fun removeHint(hint: EdgeChameleonHintNode) {
+        if (hints.remove(hint)) hintsChanged()
+    }
+
+    /** A hint came, went or changed, so the bars are looked at again at the full rate. */
+    fun hintsChanged() {
+        if (!isAttached || !isSampling) return
+        throttle?.reset()
+        throttle?.request()
     }
 
     fun update(
@@ -103,6 +171,7 @@ internal class EdgeChameleonNode(
     ) {
         settingsVersion++
         val tuningChanged = this.tuning != tuning
+        val sourceChanged = this.tuning.samplingSource != tuning.samplingSource
         val statusRemoved = this.statusBar && !statusBar
         val navigationRemoved = this.navigationBar && !navigationBar
         val previousState = this.state
@@ -120,10 +189,16 @@ internal class EdgeChameleonNode(
         }
         // Before the node is attached, onAttach builds everything for the current tuning
         if (tuningChanged && isAttached) rebuildForTuning()
+        if (sourceChanged && isAttached) {
+            // A new source gets a new chance, and what only the old one needed is given back
+            windowFailed = false
+            releaseLayers()
+        }
         if (statusRemoved || navigationRemoved) {
             // Hands bars that are no longer included back to the app, and keeps the other bar
             releaseBars(statusRemoved, navigationRemoved)
         }
+        forgetLastSample()
         syncMode()
         invalidateDraw()
     }
@@ -131,9 +206,29 @@ internal class EdgeChameleonNode(
     private fun rebuildForTuning() {
         statusWeights = BarDecider.statusBarWeights(tuning.cellCount, tuning.iconZoneWeight)
         navigationWeights = BarDecider.navigationBarWeights(tuning.cellCount)
+        statusLuminances = FloatArray(tuning.cellCount)
+        navigationLuminances = FloatArray(tuning.cellCount)
+        hintIcons = arrayOfNulls(tuning.cellCount)
+        forgetLastSample()
         // A sample of the old tuning must not run next to the one of the new tuning
         throttle?.cancel()
-        throttle = SampleThrottle(coroutineScope, 1000L / tuning.maxSamplesPerSecond) { sample() }
+        throttle =
+            SampleThrottle(
+                coroutineScope,
+                1000L / tuning.maxSamplesPerSecond,
+                tuning.maxIdleIntervalMillis.toLong(),
+            ) {
+                sample()
+            }
+    }
+
+    /** The next sample counts as a change, and so brings back the fast sampling rate. */
+    private fun forgetLastSample() {
+        statusLuminances.fill(Float.NaN)
+        navigationLuminances.fill(Float.NaN)
+        lastStatusRegion = null
+        lastNavigationRegion = null
+        throttle?.reset()
     }
 
     private fun syncMode() {
@@ -185,13 +280,29 @@ internal class EdgeChameleonNode(
     }
 
     private fun releaseLayers() {
+        releaseContentLayers()
+        reader?.release()
+        reader = null
+        windowReader?.release()
+        windowReader = null
+    }
+
+    /** Gives the layers back and keeps the readers, as they are costly to build again. */
+    private fun releaseContentLayers() {
         val context = graphicsContext ?: return
         contentLayer?.let(context::releaseGraphicsLayer)
         sampleLayer?.let(context::releaseGraphicsLayer)
         contentLayer = null
         sampleLayer = null
-        reader?.release()
-        reader = null
+    }
+
+    /** Gives up on reading the window, and draws the content a second time instead. */
+    private fun fallBackToContent() {
+        windowFailed = true
+        windowReader?.release()
+        windowReader = null
+        invalidateDraw()
+        throttle?.request()
     }
 
     /** Gives up on sampling, and hands the bars back to the app. */
@@ -204,21 +315,28 @@ internal class EdgeChameleonNode(
 
     override fun ContentDrawScope.draw() {
         val context = graphicsContext
-        if (!isSampling || context == null) {
+        if (!isSampling || coveredByHints || usesWindow || context == null) {
             drawContent()
             return
         }
         val layer = contentLayer ?: context.createGraphicsLayer().also { contentLayer = it }
         // The DrawScope member, as only that redirects this scope's drawContent() into the layer
-        layer.record(size.toIntSize()) { this@draw.drawContent() }
+        traceSection("EdgeChameleon.recordContent") {
+            layer.record(size.toIntSize()) { this@draw.drawContent() }
+        }
         drawLayer(layer)
     }
 
     private suspend fun sample() {
         val bars = bars ?: return
-        val content = contentLayer ?: return
         val context = graphicsContext ?: return
-        if (!isAttached || !isSampling || !bars.hasFocus) return
+        if (!isAttached || !isSampling) return
+        if (!bars.hasFocus) {
+            // The content can change while another window has the focus, so look again at the
+            // full rate once it returns
+            forgetLastSample()
+            return
+        }
         val version = settingsVersion
 
         // Taken now and not when the node was placed, as an ancestor can move it without placing
@@ -234,31 +352,87 @@ internal class EdgeChameleonNode(
         if (statusRegion == null && navigationRegion == null) return
 
         // The status bar uses the first row. A side navigation bar uses the first column below it,
-        // and any other navigation bar the second row.
-        val cells = tuning.cellCount
+        // and any other navigation bar the second row. The shape of the whole bar tells which, as
+        // the part under a small modifier can be taller than wide on any bar.
+        val navigationBounds = regions.navigationBar
         val isSideNavigation =
-            navigationRegion != null && navigationRegion.height > navigationRegion.width
-        val width = cells
-        val height = if (isSideNavigation) cells + 1 else 2
-        val layer = sampleLayer ?: context.createGraphicsLayer().also { sampleLayer = it }
-        layer.record(requireDensity(), requireLayoutDirection(), IntSize(width, height)) {
-            if (statusRegion != null) {
-                drawRegion(content, origin, statusRegion, Rect(0f, 0f, cells.toFloat(), 1f))
+            navigationRegion != null &&
+                navigationBounds != null &&
+                navigationBounds.height > navigationBounds.width
+        val cells = tuning.cellCount
+        val hintsMoved = collectHints()
+        val statusHinted = statusRegion?.let {
+            decideFromHints(it, isVertical = false, statusWeights, statusIcons)
+        }
+        val navigationHinted = navigationRegion?.let {
+            decideFromHints(it, isSideNavigation, navigationWeights, navigationIcons)
+        }
+        val statusNeedsPixels = statusRegion != null && statusHinted == null
+        val navigationNeedsPixels = navigationRegion != null && navigationHinted == null
+        if (!statusNeedsPixels && !navigationNeedsPixels) {
+            // Hints decide everything, so nothing is recorded or read
+            if (!coveredByHints) {
+                coveredByHints = true
+                releaseContentLayers()
+                invalidateDraw()
             }
-            if (navigationRegion != null) {
-                val target =
-                    if (isSideNavigation) {
-                        Rect(0f, 1f, 1f, cells + 1f)
-                    } else {
-                        Rect(0f, 1f, cells.toFloat(), 2f)
-                    }
-                drawRegion(content, origin, navigationRegion, target)
+            // Nothing is measured, so what counts as a change is a hint that moved or came, or
+            // icons that are not the ones that are shown. A screen that keeps redrawing behind
+            // steady hints can then be looked at less often.
+            val changed =
+                hintsMoved ||
+                    statusRegion != lastStatusRegion ||
+                    navigationRegion != lastNavigationRegion ||
+                    (statusHinted != null && statusHinted != statusIcons) ||
+                    (navigationHinted != null && navigationHinted != navigationIcons)
+            lastStatusRegion = statusRegion
+            lastNavigationRegion = navigationRegion
+            throttle?.reportResult(changed)
+            applyIcons(statusHinted, navigationHinted)
+            state?.let {
+                it.statusBarCells = emptyList()
+                it.navigationBarCells = emptyList()
             }
+            return
+        }
+        if (coveredByHints) {
+            // The content was not recorded while hints covered the bars, so let it be drawn once
+            // before it is read. The pause is short, as nothing was measured while it grew.
+            coveredByHints = false
+            invalidateDraw()
+            throttle?.reset()
+            throttle?.request()
+            return
         }
 
+        val width = cells
+        val height = if (isSideNavigation) cells + 1 else 2
         val size = width * height
         if (pixels.size < size) pixels = IntArray(size)
-        val hasPixels = readPixels(layer, width, height)
+        val hasPixels =
+            if (usesWindow) {
+                readWindow(
+                    statusRegion.takeIf { statusNeedsPixels },
+                    navigationRegion.takeIf { navigationNeedsPixels },
+                    isSideNavigation,
+                    cells,
+                )
+            } else {
+                val content = contentLayer ?: return
+                val layer = sampleLayer ?: context.createGraphicsLayer().also { sampleLayer = it }
+                recordSample(
+                    layer,
+                    content,
+                    origin,
+                    statusRegion.takeIf { statusNeedsPixels },
+                    navigationRegion.takeIf { navigationNeedsPixels },
+                    isSideNavigation,
+                    cells,
+                    width,
+                    height,
+                )
+                readPixels(layer, width, height)
+            }
         // The node can be detached while the read is suspended, and a result for old settings must
         // not be applied. An update has already requested a new sample if one is needed.
         if (!isAttached || this.bars !== bars || version != settingsVersion) return
@@ -271,44 +445,166 @@ internal class EdgeChameleonNode(
         failedReads = 0
         state?.let { it.sampleCount++ }
 
-        val newStatus = statusRegion?.let {
-            BarDecider.decide(
-                pixels,
-                0,
-                1,
-                cells,
-                statusWeights,
-                statusIcons,
-                tuning.contrastThreshold,
-                tuning.hysteresis,
-            )
-        }
         val navigationStride = if (isSideNavigation) width else 1
-        val newNavigation = navigationRegion?.let {
-            BarDecider.decide(
-                pixels,
-                width,
-                navigationStride,
-                cells,
-                navigationWeights,
-                navigationIcons,
-                tuning.contrastThreshold,
-                tuning.hysteresis,
-            )
+        var changed = statusRegion != lastStatusRegion || navigationRegion != lastNavigationRegion
+        lastStatusRegion = statusRegion
+        lastNavigationRegion = navigationRegion
+        if (statusNeedsPixels) {
+            changed =
+                BarDecider.updateLuminances(
+                    pixels,
+                    0,
+                    1,
+                    cells,
+                    statusLuminances,
+                    BarDecider.ChangeEpsilon,
+                ) || changed
         }
-        applyIcons(newStatus, newNavigation)
+        if (navigationNeedsPixels) {
+            changed =
+                BarDecider.updateLuminances(
+                    pixels,
+                    width,
+                    navigationStride,
+                    cells,
+                    navigationLuminances,
+                    BarDecider.ChangeEpsilon,
+                ) || changed
+        }
+        throttle?.reportResult(changed)
+
+        val newStatus =
+            statusHinted
+                ?: if (statusNeedsPixels) {
+                    BarDecider.decide(
+                        pixels,
+                        0,
+                        1,
+                        cells,
+                        statusWeights,
+                        statusIcons,
+                        tuning.contrastThreshold,
+                        tuning.hysteresis,
+                    )
+                } else {
+                    null
+                }
+        val newNavigation =
+            navigationHinted
+                ?: if (navigationNeedsPixels) {
+                    BarDecider.decide(
+                        pixels,
+                        width,
+                        navigationStride,
+                        cells,
+                        navigationWeights,
+                        navigationIcons,
+                        tuning.contrastThreshold,
+                        tuning.hysteresis,
+                    )
+                } else {
+                    null
+                }
+        traceSection("EdgeChameleon.applyIcons") { applyIcons(newStatus, newNavigation) }
 
         val state = state
         if (state != null && state.collectCells) {
             state.statusBarCells =
-                if (statusRegion != null) List(cells) { Color(pixels[it]) } else emptyList()
+                if (statusNeedsPixels) List(cells) { Color(pixels[it]) } else emptyList()
             state.navigationBarCells =
-                if (navigationRegion != null) {
+                if (navigationNeedsPixels) {
                     List(cells) { Color(pixels[width + it * navigationStride]) }
                 } else {
                     emptyList()
                 }
         }
+    }
+
+    private fun recordSample(
+        layer: GraphicsLayer,
+        content: GraphicsLayer,
+        origin: Offset,
+        statusRegion: Rect?,
+        navigationRegion: Rect?,
+        isSideNavigation: Boolean,
+        cells: Int,
+        width: Int,
+        height: Int,
+    ) {
+        traceSection("EdgeChameleon.recordSample") {
+            layer.record(requireDensity(), requireLayoutDirection(), IntSize(width, height)) {
+                if (statusRegion != null) {
+                    drawRegion(content, origin, statusRegion, Rect(0f, 0f, cells.toFloat(), 1f))
+                }
+                if (navigationRegion != null) {
+                    val target =
+                        if (isSideNavigation) {
+                            Rect(0f, 1f, 1f, cells + 1f)
+                        } else {
+                            Rect(0f, 1f, cells.toFloat(), 2f)
+                        }
+                    drawRegion(content, origin, navigationRegion, target)
+                }
+            }
+        }
+    }
+
+    /**
+     * Reads the bars from the window into [pixels]. When the window can not be read, the content is
+     * drawn a second time instead, as the app must never lose its icons because of it.
+     */
+    private suspend fun readWindow(
+        statusRegion: Rect?,
+        navigationRegion: Rect?,
+        isSideNavigation: Boolean,
+        cells: Int,
+    ): Boolean {
+        try {
+            val current =
+                windowReader
+                    ?: bars?.createWindowReader()?.also { windowReader = it }
+                    ?: run {
+                        fallBackToContent()
+                        return false
+                    }
+            return current.read(statusRegion, navigationRegion, isSideNavigation, cells, pixels)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            fallBackToContent()
+            return false
+        }
+    }
+
+    /**
+     * Collects where the hints are now into [hintBuffer], and returns whether they differ from the
+     * ones of the previous sample.
+     */
+    private fun collectHints(): Boolean {
+        hintBuffer.clear()
+        for (hint in hints) hint.current()?.let(hintBuffer::add)
+        val moved = hintBuffer != lastHints
+        if (moved) {
+            lastHints.clear()
+            lastHints.addAll(hintBuffer)
+        }
+        return moved
+    }
+
+    /**
+     * The icons that the hints of [collectHints] give [region], or null when they do not cover all
+     * of it. The cells of the bar lie in a column if [isVertical].
+     */
+    private fun decideFromHints(
+        region: Rect,
+        isVertical: Boolean,
+        weights: FloatArray,
+        previous: BarIcons?,
+    ): BarIcons? {
+        if (hintBuffer.isEmpty()) return null
+        val cells = tuning.cellCount
+        if (!HintCoverage.fill(hintIcons, region, isVertical, cells, hintBuffer)) return null
+        return BarDecider.decideFromIcons(hintIcons, cells, weights, previous)
     }
 
     /**

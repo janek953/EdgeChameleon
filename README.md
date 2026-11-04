@@ -105,12 +105,31 @@ Modifier.edgeChameleon(
 )
 ```
 
-`EdgeChameleonTuning` sets the sampling rate, cell count, contrast threshold, hysteresis and zone weights. It is marked
+`EdgeChameleonTuning` sets the sampling rate, the longest pause while nothing changes, cell count, contrast threshold,
+hysteresis, zone weights and where the pixels are read from (`SamplingSource`). It is marked
 `@ExperimentalEdgeChameleonApi`.
+
+## Hints
+
+Sampling needs a readback, which is the only cost of the library. A bar that lies completely over content with a known
+colour needs none: tell the library the icons with `Modifier.edgeChameleonHint`.
+
+```kotlin
+TopAppBar(
+    modifier = Modifier.edgeChameleonHint(BarIcons.Light), // a dark app bar needs light icons
+    ...
+)
+```
+
+While hints cover every cell of the included bars, nothing is read, and the content is not recorded for sampling. A bar
+that is only partly covered, or not at all, is sampled as usual, so a hint can never leave a bar without icons. Put the
+hint on content that is the topmost thing behind the bar, and avoid overlapping hints.
 
 ## Behaviour on Android
 
-- The content is sampled after it changes, at most 10 times per second, and not at all on a static screen.
+- The content is sampled after it changes, at most 10 times per second, and not at all on a static screen. While
+  the bars keep showing the same colours, for example behind a spinner somewhere else on the screen, the pause grows up
+  to 500 ms, and a change after that is seen after at most that long.
 - Each bar is reduced to 16 cells, and the cells vote for the icon colour with the better contrast. In the status bar,
   the outer quarters, where the clock and the system icons sit, count three times. In the navigation bar, every cell
   counts the same, so the whole width of the bar decides.
