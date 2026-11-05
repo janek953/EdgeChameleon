@@ -20,6 +20,9 @@
 - Since 0.2.0 the library depends on `androidx.core` 1.19.1, so an app needs compileSdk 37 and Android Gradle Plugin
   9.1 or newer. The README lists this under Requirements
 - The README and `SECURITY.md` say what `SamplingSource.Window` sees, which is more than the content of the modifier
+- The README and `docs/ADVANCED.md` say how a `TextureView` and a `SurfaceView` behind a bar are handled: a `TextureView`
+  is sampled with both sources, a `SurfaceView` is not seen by either, and a hint sets the icons there. A device test
+  covers all of it
 
 ## [0.3.0]
 

@@ -140,6 +140,9 @@ has no effect without one.
   counts the same, so the whole width of the bar decides.
 - By default, only Compose content inside the modifier is sampled. The experimental `SamplingSource.Window` also sees Views and
   everything else the window shows, see [Sampling source](docs/ADVANCED.md#sampling-source).
+- A `TextureView` is sampled like other content, with both sources. A `SurfaceView` is not: it draws on a surface of its
+  own that neither source sees, so its cells have no vote and the icons stay with the app. Use a hint or `forcedIcons`
+  there, see [TextureView and SurfaceView](docs/ADVANCED.md#textureview-and-surfaceview).
 - Sampling pauses while another window, such as a `Dialog`, has the focus, and the icons keep their tint until the focus
   returns.
 - A full-screen `Dialog` has its own bars: add the modifier to the content of the dialog as well. It has no effect in a

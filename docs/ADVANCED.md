@@ -51,6 +51,32 @@ With both sources, only the part of a bar that lies under the modifier is looked
 `Window` falls back to `Content` when the window cannot be copied, for example because it is secure, so the app never
 loses its icons because of it. Hints work with both sources: a bar that hints cover completely is not read at all.
 
+### TextureView and SurfaceView
+
+Video players, camera previews and maps often draw into a `TextureView` or a `SurfaceView` behind the status bar.
+`ExternalSurfaceDeviceTest` paints both with a single colour from the view itself, and checks the icons on an Android 17
+(API 37) emulator:
+
+| View | `Content` | `Window` |
+|---|---|---|
+| `TextureView` | Sampled: the icons follow its frames | Sampled: the icons follow its frames |
+| `SurfaceView` | Not seen: all cells are transparent, so none has a vote, and the icons stay with the app | Not seen, the same |
+
+A `SurfaceView` draws on a surface of its own, which the system puts behind the window, and leaves a transparent hole in
+the window. Neither source reads that surface. When it covers a whole bar, no cell votes and the library leaves the icons
+alone. When it covers part of a bar, the cells beside it decide. Compose's `AndroidEmbeddedExternalSurface` is a
+`TextureView` and `AndroidExternalSurface` a `SurfaceView`.
+
+For a `SurfaceView` with content of a known colour, tell the library the icons with a hint, or use `forcedIcons`. A hint
+covers the bar, so nothing is read, as the test checks:
+
+```kotlin
+AndroidView(
+    factory = { context -> SurfaceView(context) },
+    modifier = Modifier.fillMaxWidth().height(240.dp).edgeChameleonHint(BarIcons.Light), // dark video
+)
+```
+
 ## Diagnostics
 
 `EdgeChameleonState` can hand out what was sampled, for example to build a debug panel:
