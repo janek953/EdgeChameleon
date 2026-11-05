@@ -18,7 +18,8 @@ Describe tests added or steps to verify (unit tests, device tests, the sample ap
 - [ ] `./gradlew ktfmtCheck ktfmtCheckScripts :edgechameleon:testAndroidHostTest :edgechameleon:jvmTest` passes locally
 - [ ] I added or updated tests
 - [ ] `./gradlew :edgechameleon:checkKotlinAbi` passes, and the dump in `edgechameleon/api` is updated after a deliberate API change
-- [ ] I updated the README if users can notice the change
+- [ ] I updated the README if users can notice the change, and `docs/ADVANCED.md` after a change of the experimental API
 - [ ] The `Snapshot` section of CHANGELOG.md is updated, if applicable
+- [ ] `./scripts/check-hygiene.sh` and `./scripts/check-links.sh` pass
 - [ ] No secrets, customer names or real app data in the diff
 - [ ] I agree to follow the Code of Conduct

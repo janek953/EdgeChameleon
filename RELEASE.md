@@ -28,15 +28,16 @@ Environments with reviewers are available for public repositories of personal ac
 
 Also set, once:
 
-- Settings → General → Releases: enable immutable releases.
-- Settings → Security → Private vulnerability reporting: enable it, see [SECURITY.md](SECURITY.md).
+- Settings → General → Releases: select "Enable release immutability".
+- Settings → Advanced Security → Private vulnerability reporting: enable it, see [SECURITY.md](SECURITY.md).
 - Optional: a tag ruleset for `*.*.*` that only lets the maintainer create tags.
 
 The ruleset of `main` lets only the maintainer push to it, so the steps below are done by them.
 
 ## Release
 
-1. Make sure `main` is green (CI: hygiene, formatting, unit tests, web and Apple compilation, public API check).
+1. Make sure `main` is green (CI: hygiene and markdown links, formatting, unit tests, web, Android sample and Apple
+   compilation, public API check).
 
 2. Update `CHANGELOG.md`:
     1. Change `Snapshot` to the version that is released, e.g. `[0.2.0]`, and remove placeholder lines such as

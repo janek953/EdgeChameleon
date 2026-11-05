@@ -31,6 +31,8 @@ jobs:
           persist-credentials: false
       - name: No secrets in the tracked files and the history
         run: ./scripts/check-hygiene.sh HEAD
+      - name: Check the markdown links
+        run: ./scripts/check-links.sh
       - name: Lint the workflows
         run: |
           go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12

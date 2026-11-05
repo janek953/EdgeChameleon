@@ -12,6 +12,15 @@
 
 - Upcoming changes go here
 
+**Documentation**
+
+- `docs/ADVANCED.md` describes the experimental API: `EdgeChameleonTuning` and the `tuning` overload of the modifier,
+  `SamplingSource`, the sampled cells and `sampleCount` of `EdgeChameleonState` (there since 0.1.0) and the
+  `EdgeChameleon.*` trace sections
+- Since 0.2.0 the library depends on `androidx.core` 1.19.1, so an app needs compileSdk 37 and Android Gradle Plugin
+  9.1 or newer. The README lists this under Requirements
+- The README and `SECURITY.md` say what `SamplingSource.Window` sees, which is more than the content of the modifier
+
 ## [0.3.0]
 
 [0.3.0]: https://github.com/rschattauer/EdgeChameleon/compare/0.2.0...0.3.0

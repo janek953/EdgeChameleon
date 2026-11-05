@@ -67,8 +67,9 @@ class MainActivity : ComponentActivity() {
 
 The icons now follow your content.
 
-**Requirements:** Android minSdk 23, with sampling from Android 9 (API 28); built with Compose Multiplatform 1.12; the
-app draws edge-to-edge.
+**Requirements:** Android minSdk 23, with sampling from Android 9 (API 28); built with Kotlin 2.4 and Compose
+Multiplatform 1.12; compileSdk 37 and Android Gradle Plugin 9.1 or newer, which `androidx.core` 1.19 asks for; the app
+draws edge-to-edge.
 
 ## Platforms
 
@@ -88,7 +89,7 @@ Taken from the sample app with its debug panel on, which shows the 16 sampled ce
 
 | Light content | Dark content | Scrolling | Mixed content |
 |---|---|---|---|
-| ![Dark icons on a white screen](docs/images/light-content.png) | ![Light icons on a dark screen](docs/images/dark-content.png) | ![Light icons while dark bands are behind both bars](docs/images/scrolling.png) | ![Light icons on a screen with dark edges and a white middle](docs/images/mixed-content.png) |
+| ![Dark icons on a white screen](docs/images/light-content.png) | ![Light icons on a dark screen](docs/images/dark-content.png) | ![Light status bar icons over a dark band, dark navigation bar icons over a light band](docs/images/scrolling.png) | ![Light icons on a screen with dark edges and a white middle](docs/images/mixed-content.png) |
 | Dark icons | Light icons | Follows what is behind each bar: light icons over a dark band, dark icons over a white one | No icon colour fits the whole bar, so an icon over a different colour can lose contrast |
 
 ## Options
@@ -106,13 +107,15 @@ Modifier.edgeChameleon(
 ```
 
 `EdgeChameleonTuning` sets the sampling rate, the longest pause while nothing changes, cell count, contrast threshold,
-hysteresis, zone weights and where the pixels are read from (`SamplingSource`). It is marked
-`@ExperimentalEdgeChameleonApi`.
+hysteresis, zone weights and where the pixels are read from (`SamplingSource`). It is passed to
+`Modifier.edgeChameleon(tuning = …)` and marked `@ExperimentalEdgeChameleonApi`, as are the sampled cells and the sample
+count of `EdgeChameleonState`. [Advanced](docs/ADVANCED.md) describes them and the trace sections of the library.
 
 ## Hints
 
-Sampling needs a readback, which is the only cost of the library. A bar that lies completely over content with a known
-colour needs none: tell the library the icons with `Modifier.edgeChameleonHint`.
+Sampling costs frame time: by default the content is recorded and drawn a second time, and a few pixels are read back.
+A bar that lies completely over content with a known colour needs none of it: tell the library the icons with
+`Modifier.edgeChameleonHint`.
 
 ```kotlin
 TopAppBar(
@@ -122,8 +125,10 @@ TopAppBar(
 ```
 
 While hints cover every cell of the included bars, nothing is read, and the content is not recorded for sampling. A bar
-that is only partly covered, or not at all, is sampled as usual, so a hint can never leave a bar without icons. Put the
-hint on content that is the topmost thing behind the bar, and avoid overlapping hints.
+that is only partly covered, or not at all, is sampled as usual, so a hint can never leave a bar without icons. Each bar
+is decided on its own: hints can settle the status bar while the navigation bar is sampled. Put the hint on content that
+is the topmost thing behind the bar, and avoid overlapping hints. A hint needs an `edgeChameleon` modifier above it, and
+has no effect without one.
 
 ## Behaviour on Android
 
@@ -133,26 +138,31 @@ hint on content that is the topmost thing behind the bar, and avoid overlapping 
 - Each bar is reduced to 16 cells, and the cells vote for the icon colour with the better contrast. In the status bar,
   the outer quarters, where the clock and the system icons sit, count three times. In the navigation bar, every cell
   counts the same, so the whole width of the bar decides.
-- Only Compose content inside the modifier is sampled.
-- Sampling pauses while another window, such as a `Dialog`, has the focus, and the icons keep their tint until then.
+- By default, only Compose content inside the modifier is sampled. The experimental `SamplingSource.Window` also sees Views and
+  everything else the window shows, see [Sampling source](docs/ADVANCED.md#sampling-source).
+- Sampling pauses while another window, such as a `Dialog`, has the focus, and the icons keep their tint until the focus
+  returns.
 - A full-screen `Dialog` has its own bars: add the modifier to the content of the dialog as well. It has no effect in a
   dialog that does not reach the bars.
 - With gesture navigation, the navigation bar is not handled.
-- While active, the navigation bar contrast scrim is turned off. It is restored when the modifier is disabled or removed.
+- On Android 10 and newer, the navigation bar contrast scrim is turned off while the modifier is active. It is restored
+  when the modifier is disabled or removed.
 - Disabling or removing the modifier restores the icons the app had before the library first changed them. Changes the
   app makes to the icons while the modifier is active are replaced.
 
 ## Sample
 
 `sample/` holds an Android app with a colour screen, scrolling bands and mixed backgrounds. Its debug toggle shows the
-sampled cells and the current result.
+sampled cells and the current result. Its `BenchmarkActivity` is what the macrobenchmark in `benchmark/` starts, see
+[CONTRIBUTING.md](CONTRIBUTING.md#development-setup).
 
-```
+```bash
 ./gradlew :sample:androidApp:installDebug
 ```
 
 ## More
 
+- [Advanced](docs/ADVANCED.md): tuning, sampling source, diagnostics and trace sections of the experimental API
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version
 - [CONTRIBUTING.md](CONTRIBUTING.md): development setup, tests, formatting and pull requests
 - [SECURITY.md](SECURITY.md): how to report a vulnerability

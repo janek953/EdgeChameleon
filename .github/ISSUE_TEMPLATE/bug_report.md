@@ -6,7 +6,7 @@ labels: bug
 
 **What happened**
 
-**Expected behavior**
+**Expected behaviour**
 
 **Steps to reproduce** (a minimal composable that shows it, and what you do on the screen)
 
@@ -21,3 +21,4 @@ labels: bug
 - Device or emulator:
 - Navigation: gesture or three buttons
 - Drawing edge-to-edge with `enableEdgeToEdge()`: yes / no
+- Tuning, sampling source or hints in use, if any:
