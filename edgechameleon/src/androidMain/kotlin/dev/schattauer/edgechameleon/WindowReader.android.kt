@@ -9,9 +9,11 @@ import android.view.PixelCopy
 import android.view.Window
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.geometry.Rect
+import androidx.core.graphics.createBitmap
 import kotlin.coroutines.resume
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -63,8 +65,8 @@ internal class PixelCopyWindowReader(private val window: Window) : WindowReader 
         if (source.isEmpty) return false
 
         val result =
-            withTimeoutOrNull(TimeoutMillis) {
-                suspendCancellableCoroutine<Int> { continuation ->
+            withTimeoutOrNull(Timeout) {
+                suspendCancellableCoroutine { continuation ->
                     PixelCopy.request(
                         window,
                         source,
@@ -105,7 +107,7 @@ internal class PixelCopyWindowReader(private val window: Window) : WindowReader 
     private fun bitmapFor(isVertical: Boolean, width: Int, height: Int): Bitmap {
         val cached = if (isVertical) columnBitmap else rowBitmap
         if (cached != null && cached.width == width && cached.height == height) return cached
-        val created = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val created = createBitmap(width, height)
         if (isVertical) columnBitmap = created else rowBitmap = created
         return created
     }
@@ -128,7 +130,7 @@ internal class PixelCopyWindowReader(private val window: Window) : WindowReader 
     }
 
     private companion object {
-        const val TimeoutMillis = 500L
+        val Timeout = 500.milliseconds
         const val MaxFailedCopies = 3
     }
 }

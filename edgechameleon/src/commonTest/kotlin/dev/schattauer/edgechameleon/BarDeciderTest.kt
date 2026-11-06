@@ -55,7 +55,7 @@ class BarDeciderTest {
     fun edgeZonesOutvoteTheMiddle() {
         val weights = BarDecider.statusBarWeights(16, iconZoneWeight = 3f)
         // The 8 edge cells are dark and the 8 middle cells are white
-        val cells = IntArray(16) { if (it < 4 || it >= 12) black else white }
+        val cells = IntArray(16) { if (it !in 4..<12) black else white }
         assertEquals(BarIcons.Light, decide(cells, weights = weights))
         assertEquals(24f + 8f, weights.sum())
     }
@@ -76,7 +76,7 @@ class BarDeciderTest {
     @Test
     fun darkEdgesAndAWhiteMiddleTieInTheNavigationBar() {
         val weights = BarDecider.navigationBarWeights(16)
-        val cells = IntArray(16) { if (it < 4 || it >= 12) black else white }
+        val cells = IntArray(16) { if (it !in 4..<12) black else white }
         // Half of the bar needs light icons and half needs dark icons, so the previous result stays
         assertNull(decide(cells, weights = weights))
         assertEquals(BarIcons.Dark, decide(cells, previous = BarIcons.Dark, weights = weights))
@@ -86,7 +86,7 @@ class BarDeciderTest {
     @Test
     fun aWhiteMiddleOfTheNavigationBarWinsOverNarrowerDarkEdges() {
         val weights = BarDecider.navigationBarWeights(16)
-        val cells = IntArray(16) { if (it < 3 || it >= 13) black else white }
+        val cells = IntArray(16) { if (it !in 3..<13) black else white }
         assertEquals(BarIcons.Dark, decide(cells, weights = weights))
     }
 

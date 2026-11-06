@@ -3,6 +3,7 @@ package dev.schattauer.edgechameleon
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -16,7 +17,7 @@ class SampleThrottleTest {
 
     // Background coroutines only run when time is advanced explicitly, not through advanceUntilIdle
     private fun TestScope.advanceBy(millis: Long) {
-        advanceTimeBy(millis)
+        advanceTimeBy(millis.milliseconds)
         runCurrent()
     }
 

@@ -34,7 +34,7 @@ class HintCoverageTest {
     fun aHintOverTheWholeBarCoversIt() {
         val (covered, icons) = fill(statusBar, BarHint(Rect(0f, 0f, 160f, 56f), BarIcons.Light))
         assertTrue(covered)
-        assertContentEquals(Array<BarIcons?>(4) { BarIcons.Light }, icons)
+        assertContentEquals(Array(4) { BarIcons.Light }, icons)
     }
 
     @Test

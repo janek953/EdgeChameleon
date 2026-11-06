@@ -1,5 +1,6 @@
 package dev.schattauer.edgechameleon
 
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -63,7 +64,7 @@ internal class SampleThrottle(
         val settleMillis = minOf(SettleMillis, intervalMillis)
         while (dirty) {
             // The signal arrives before the frame is drawn, so give that frame time to finish
-            delay(settleMillis)
+            delay(settleMillis.milliseconds)
             dirty = false
             sample()
             // In steps of the normal pause, so that a reset does not wait for a long pause to end
@@ -72,7 +73,7 @@ internal class SampleThrottle(
                 val remaining = currentIntervalMillis - waited
                 if (remaining <= 0L) break
                 val step = minOf(intervalMillis, remaining)
-                delay(step)
+                delay(step.milliseconds)
                 waited += step
             }
         }

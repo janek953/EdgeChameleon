@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -104,7 +105,7 @@ private class AsyncLayerReader : LayerReader {
 
         // A frame that is not drawn never arrives, so this must not wait forever
         val received =
-            withTimeoutOrNull(TimeoutMillis) {
+            withTimeoutOrNull(Timeout) {
                 while (synchronized(lock) { frames } == framesBefore) arrived.receive()
                 true
             } ?: false
@@ -153,7 +154,7 @@ private class AsyncLayerReader : LayerReader {
                 // The reader was closed while this was waiting to run
                 null
             } ?: return
-        try {
+        image.use { image ->
             val plane = image.planes[0]
             val buffer = plane.buffer
             synchronized(lock) {
@@ -179,8 +180,6 @@ private class AsyncLayerReader : LayerReader {
                 frames++
             }
             arrived.trySend(Unit)
-        } finally {
-            image.close()
         }
     }
 
@@ -203,7 +202,7 @@ private class AsyncLayerReader : LayerReader {
 
     private companion object {
         const val MaxImages = 2
-        const val TimeoutMillis = 500L
+        val Timeout = 500.milliseconds
 
         /** Results of a sync after which no frame is drawn. */
         const val NoFrame =
