@@ -12,9 +12,12 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
 import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.PointerInputModifierNode
 import androidx.compose.ui.node.TraversableNode
 import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.invalidateDraw
@@ -41,7 +44,12 @@ internal class EdgeChameleonNode(
     private var navigationBar: Boolean,
     private var state: EdgeChameleonState?,
     private var tuning: EdgeChameleonTuning,
-) : Modifier.Node(), DrawModifierNode, CompositionLocalConsumerModifierNode, TraversableNode {
+) :
+    Modifier.Node(),
+    DrawModifierNode,
+    CompositionLocalConsumerModifierNode,
+    TraversableNode,
+    PointerInputModifierNode {
 
     override val traverseKey: Any = EdgeChameleonKey
 
@@ -159,6 +167,20 @@ internal class EdgeChameleonNode(
         if (!isAttached || !isSampling) return
         throttle?.reset()
         throttle?.request()
+    }
+
+    override fun onPointerEvent(
+        pointerEvent: PointerEvent,
+        pass: PointerEventPass,
+        bounds: IntSize,
+    ) {
+        if (pass == PointerEventPass.Initial && isSampling) throttle?.reset()
+    }
+
+    override fun onCancelPointerInput() {}
+
+    override fun sharePointerInputWithSiblings(): Boolean {
+        return true
     }
 
     fun update(
